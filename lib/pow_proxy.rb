@@ -4,12 +4,14 @@ require "rack"
 class PowProxy
   DEFAULT_HOST = "127.0.0.1"
   DEFAULT_PORT = 3000
+  DEFAULT_PATH = ""
 
-  attr_reader :host, :port
+  attr_reader :host, :port, :path
 
   def initialize(options = {})
     @host = options.delete(:host) || ENV['POW_PROXY_HOST'] || DEFAULT_HOST
     @port = options.delete(:port) || ENV['POW_PROXY_PORT'] || DEFAULT_PORT
+    @path = options.delete(:path) || ENV['POW_PROXY_PATH'] || DEFAULT_PATH
   end
 
   def call(env)
@@ -27,7 +29,7 @@ class PowProxy
 
       http = Net::HTTP.new(@host, @port)
       http.start do |http|
-        response = http.send_request(request.request_method, request.fullpath, request.body.read, headers)
+        response = http.send_request(request.request_method, @path + request.fullpath, request.body.read, headers)
         headers = response.to_hash
         headers.delete "transfer-encoding"
         [response.code, headers, [response.body]]
